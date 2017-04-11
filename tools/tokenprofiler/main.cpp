@@ -72,13 +72,14 @@ static cl::list<string> inPath{cl::Positional,
 							   cl::cat{tokenProfilerCategory}};
 
 
-static void analyzeModule(Module& module, BUG_REPO& bugs)
+static void analyzeModule(Module& module, BUG_REPO& bugs,
+	tokenprofiling::TOKEN_REPO& tok_repo)
 {
 	// Build up all of the passes that we want to run on the module.
 	legacy::PassManager pm;
 	pm.add(new DominatorTreeWrapperPass());
 	pm.add(new LoopInfoWrapperPass());
-	pm.add(new tokenprofiling::TokenVectorPass(bugs));
+	pm.add(new tokenprofiling::TokenVectorPass(bugs, &tok_repo));
 	pm.add(createVerifierPass());
 	pm.run(module);
 }
@@ -98,6 +99,7 @@ static void parseForBugs(BUG_REPO& bugs)
 		bugs[modname].emplace(line);
 		bugline.clear();
 	}
+	bFile.close();
 }
 
 
@@ -128,6 +130,7 @@ int main(int argc, char** argv)
 		parseForBugs(bugs);
 	}
 
+	tokenprofiling::TOKEN_REPO tok_repo;
 	for (auto& inVal : inPath)
 	{
 		unique_ptr<Module> module = parseIRFile(inVal, err, context);
@@ -136,8 +139,18 @@ int main(int argc, char** argv)
 			err.print(argv[0], errs());
 			return -1;
 		}
-		analyzeModule(*module, bugs);
+		analyzeModule(*module, bugs, tok_repo);
 	}
+
+	std::ofstream encoding_out("token_encoding.csv", std::ofstream::app);
+	if (encoding_out.good())
+	{
+		for (std::string tkstr : tok_repo.tokens_)
+		{
+			encoding_out << tkstr << std::endl;
+		}
+	}
+	encoding_out.close();
 
 	return 0;
 }

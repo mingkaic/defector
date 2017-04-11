@@ -16,8 +16,8 @@ For simplicity, we will directly insert defects into our token vectors.
 # Token profiler
 
 Token profiler takes a buggy instruction in csv and a series of files and outputs two csv files:
-1. file with each line mapping token integer value to its label
-2. file with each line representing token vectors as a series of integers
+1. `token_vector.csv`: file with each line mapping token integer value to its label
+2. `token_encoding.csv`: file with each line containing the token label corresponding to the integer value represented by the line number
 
 ## Usage
 
@@ -41,3 +41,4 @@ How to analyze:
 - include <stdlib.h> to dump.c for non-linux OS
 
 - build to generate include files from their config
+ 

@@ -58,7 +58,6 @@ void foo::set (std::string s, bool left)
 	{
 		u -= 12;
 	}
-	print();
 }
 
 void foo::print (void)
