@@ -27,6 +27,60 @@ bug.csv is optional but must specify defects in the following format:
 
 <\Filename>, <\Line #>
 
+## Token Vector Processing
+
+### Pruning
+
+We remove all token vectors of size 1, since these vectors are most likely just function declaration and are independent of other internal functions
+
+### Inject Faults (Experiment)
+
+We will not specify a bug file `bug.csv`. Instead, we inject faults into token vectors
+
+Randomly select non-pruned vectors and inject specific defective tokens 
+(defects related to program structure), or not inject tokens (defects related to syntax and operation), or simply mark specific existing as defective.
+
+### Defect Types
+
+Specified from (http://www.cs.kent.edu/~jmaletic/cs63901/forms/DefectTypes.pdf)
+
+Not captured by Tokens
+- Documentation
+
+- Build/Package
+
+- Syntax/Static
+
+- Assignment
+
+Not easily captured by Tokens
+
+- Data
+
+- Interface
+
+Captured by Tokens
+
+- Checking (if statements)
+
+- Function
+
+- System
+
+- Environment
+
+Mutation Operations:
+
+- Interface and functions defective by mutation
+
+- Artificially label checks as defective
+
+- Remove if and else to simulate lack of checks
+
+- Add/remove system/environment/internal calls
+
+- Swap calls to simulate incorrect data
+
 # Tests
 
 Tests chosen are ideally high quality (high coverage and build passing). 

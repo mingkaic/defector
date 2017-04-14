@@ -45,12 +45,13 @@ static optional<unsigned> getLineNumber(Module& m, Instruction& inst)
 }
 
 
-static void printTokens (std::ofstream& o, bool buggy, std::vector<uint64_t>& tks)
+static void printTokens (llvm::Module& module, std::ofstream& o, bool buggy, std::vector<uint64_t>& tks)
 {
-	if (!tks.empty() && o.good())
+	if (1 < tks.size() && o.good())
+	// prune tokens of size 1
 	{
 		// out put ttv
-		o << buggy;
+		o << module.getName().str() << "," << buggy;
 		for (uint64_t tk : tks)
 		{
 			o << "," << tk;
@@ -138,6 +139,7 @@ void TokenVectorPass::tokenSetup (llvm::Module& module, std::unordered_set<uint6
 			if (0 != declname.find("llvm.") &&
 				0 != declname.find("__"))
 			{
+				methodClean(declname);
 				storeToken(setFuncId(declname), "declare("+declname+")");
 			}
 			continue;
@@ -168,6 +170,7 @@ void TokenVectorPass::tokenSetup (llvm::Module& module, std::unordered_set<uint6
 						std::string callname = directCall->getName().str();
 						if (0 == callname.find("llvm.") ||
 							0 == callname.find("__")) continue;
+						methodClean(callname);
 						storeToken(fid, callname);
 						// this function has a dependency on callee function, record dependence
 						immediate_dependents[callname].emplace(fid);
@@ -176,6 +179,7 @@ void TokenVectorPass::tokenSetup (llvm::Module& module, std::unordered_set<uint6
 					{
 						// this function has a dependency on callee function, but can't record dependence
 						std::string instname = instr->getName().str();
+						methodClean(instname);
 						storeToken(fid, instname);
 					}
 				}
@@ -402,14 +406,14 @@ bool TokenVectorPass::runOnModule(llvm::Module& module)
 			std::vector<uint64_t>& tvec = tok_vector_[func];
 			vecs.insert(vecs.end(), tvec.begin(), tvec.end());
 		}
-		printTokens(tv_out, buggy, vecs);
+		printTokens(module, tv_out, buggy, vecs);
 	}
 	for (auto tvit : tok_vector_)
 	{
 		uint64_t func = tvit.first;
 		if (painted.end() == painted.find(func))
 		{
-			printTokens(tv_out, err_funcs.end() != err_funcs.find(func), tvit.second);
+			printTokens(module, tv_out, err_funcs.end() != err_funcs.find(func), tvit.second);
 		}
 	}
 	tv_out.close();

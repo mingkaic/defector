@@ -4,7 +4,7 @@ TOKENPROFILER=../bin/bin/tokenprofiler
 
 llfiles=""
 
-for file in ./ll/*.ll
+for file in ./ll/**/*.ll
 do
     llfiles="$llfiles $file"
 done

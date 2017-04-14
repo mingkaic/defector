@@ -1,1 +1,1 @@
-projects/jansson/src;projects/jansson/build/private_include -I projects/jansson/build/include -I projects/jansson/src
+ll/jansson;projects/jansson/src;-I projects/jansson/build/private_include -I projects/jansson/build/include -I projects/jansson/src

@@ -56,6 +56,8 @@ struct TokenVectorPass : public llvm::ModulePass
 		au.addRequired<llvm::LoopInfoWrapperPass>();
 	}
 
+	void methodClean (std::string& method_label) {}
+
 	bool runOnModule(llvm::Module& m) override;
 
 	void storeToken(uint64_t func_id, std::string label);
