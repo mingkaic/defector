@@ -15,6 +15,9 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <iostream>
+
+#include "edlib.h"
 
 
 using BUG_REPO = std::unordered_map<std::string, std::unordered_set<uint64_t> >;
@@ -87,13 +90,15 @@ struct TokenVectorPass : public llvm::ModulePass
 	uint64_t last_token = 0;
 
 	TOKEN_REPO* tok_repo_;
-
 	VEC_INFO token_vectors_;
 
+	// function name to function id (ordered topographically)
 	std::unordered_map<std::string, uint64_t> func_ids_;
-
+	// temporary token vector mapping function id to vector
 	std::unordered_map<uint64_t, std::vector<uint64_t> > tok_vector_;
 
+	// for cleaning method calls
+	std::list<std::string> neighbors_;
 	std::unordered_set<std::string> methods_;
 
 	TokenVectorPass(TOKEN_REPO* repo) : llvm::ModulePass(ID), tok_repo_(repo) {}
@@ -107,7 +112,48 @@ struct TokenVectorPass : public llvm::ModulePass
 		au.addRequired<llvm::LoopInfoWrapperPass>();
 	}
 
-	void methodClean (std::string& method_label) {}
+	void methodClean (std::string& method_label)
+	{
+		if (method_label.empty()) return;
+		size_t labelsize = method_label.size();
+		short noise_potential = 0;
+		// find minimal edit distance
+		for (std::string neigh_lbl : neighbors_)
+		{
+			int dist = edlibAlign(neigh_lbl.data(), neigh_lbl.size(),
+				method_label.data(), labelsize,
+				edlibDefaultAlignConfig()).editDistance;
+			if (dist > 40)
+			{
+				noise_potential++;
+			}
+		}
+		// remove if noisy
+		if (noise_potential > 5)
+		{
+			method_label = "";
+			return;
+		}
+		// update neighbors
+		neighbors_.push_back(method_label);
+		if (neighbors_.size() > 10) // CLNI k = 10
+		{
+			neighbors_.pop_front();
+		}
+		// cull out similar tokens with absurdly long labels
+		for (std::string meths : methods_)
+		{
+			int dist = edlibAlign(meths.data(), meths.size(),
+				method_label.data(), labelsize,
+				edlibDefaultAlignConfig()).editDistance;
+			if (dist < 3 && dist != 0 && labelsize > 20)
+			{
+				method_label = meths;
+				break;
+			}
+		}
+		methods_.emplace(method_label);
+	}
 
 	bool runOnModule(llvm::Module& m) override;
 

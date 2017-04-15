@@ -35,6 +35,8 @@ We remove all token vectors of size 1, since these vectors are most likely just 
 
 We remove all tokens used less than 3 times across all projects
 
+We remove all noise identified by CLNI using edit distance supplied in https://github.com/Martinsos/edlib
+
 ### Inject Faults (Experiment)
 
 We will not specify a bug file `bug.csv`. Instead, we inject faults into token vectors
