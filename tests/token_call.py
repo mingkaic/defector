@@ -44,6 +44,8 @@ def encode_tokens (project = None):
     maxvec = 0
 
     if project:
+        if project not in tokeninfo:
+            project = "jansson"
         for info in tokeninfo[project]:
             norm = map(lambda x: (1.0 + float(x)) / max, info.vec)
             if maxvec < len(norm):
