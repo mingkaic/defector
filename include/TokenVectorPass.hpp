@@ -33,13 +33,14 @@ struct TOKEN_REPO
 	std::vector<size_t> usage_;
 	std::unordered_map<std::string, uint64_t> token_map_;
 
-	void infrequent (std::unordered_set<uint64_t>& infreq, size_t min_uses)
+	void frequent_map (std::unordered_map<uint64_t, uint64_t>& infreq, size_t min_uses)
 	{
+		uint64_t newi = 0;
 		for (uint64_t i = 0, n = usage_.size(); i < n; i++)
 		{
-			if (usage_[i] < min_uses)
+			if (usage_[i] >= min_uses)
 			{
-				infreq.emplace(i);
+				infreq[i] = newi++;
 			}
 		}
 	}
@@ -52,13 +53,25 @@ struct TOK_INFO
 	bool buggy_;
 	std::vector<uint64_t> vecs_;
 
-	void prune (std::unordered_set<uint64_t>& infrequent_toks)
+	void prune (const std::unordered_map<uint64_t, uint64_t>& frequent_toks)
 	{
-		std::remove_if(vecs_.begin(), vecs_.end(),
-		[&infrequent_toks](uint64_t ti)
+		std::vector<uint64_t> trash;
+		for (size_t i = 0, n = vecs_.size(); i < n; i++)
 		{
-			return infrequent_toks.end() != infrequent_toks.find(ti);
-		});
+			if (frequent_toks.end() == frequent_toks.find(vecs_[i]))
+			{
+				trash.push_back(i);
+			}
+			else
+			{
+
+				vecs_[i] = frequent_toks.at(vecs_[i]);
+			}
+		}
+		for (auto rit = trash.rbegin(), ret = trash.rend(); rit != ret; rit++)
+		{
+			vecs_.erase(vecs_.begin() + *rit);
+		}
 	}
 
 	void print (std::ofstream& o)

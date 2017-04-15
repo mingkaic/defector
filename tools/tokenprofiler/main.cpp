@@ -150,23 +150,31 @@ int main(int argc, char** argv)
 		analyzeModule(*module, bugs, tok_repo);
 	}
 
-	std::unordered_set<uint64_t> infreq;
-	tok_repo.infrequent(infreq, 3);
-	std::ofstream tv_out("token_vector.csv", std::ofstream::app);
+	std::unordered_map<uint64_t, uint64_t> freq;
+	tok_repo.frequent_map(freq, 3);
+	std::ofstream tv_out("token_vector.csv", std::ofstream::out);
+
 	for (tokenprofiling::TOK_INFO& info : token_vectors)
 	{
-		info.prune(infreq);
+		info.prune(freq);
+
 		if (false == info.vecs_.empty())
 		{
 			info.print(tv_out);
 		}
 	}
 
-	std::ofstream encoding_out("token_encoding.csv", std::ofstream::app);
+	std::ofstream encoding_out("token_encoding.csv", std::ofstream::out);
 	if (encoding_out.good())
 	{
-		for (std::string tkstr : tok_repo.tokens_)
+		std::vector<signed> indices(freq.size(), -1);
+		for (auto it : freq)
 		{
+			indices[it.second] = it.first;
+		}
+		for (signed i : indices)
+		{
+			std::string tkstr = tok_repo.tokens_[i];
 			encoding_out << tkstr << std::endl;
 		}
 	}
