@@ -33,6 +33,8 @@ bug.csv is optional but must specify defects in the following format:
 
 We remove all token vectors of size 1, since these vectors are most likely just function declaration and are independent of other internal functions
 
+We remove all tokens used less than 3 times across all projects
+
 ### Inject Faults (Experiment)
 
 We will not specify a bug file `bug.csv`. Instead, we inject faults into token vectors
@@ -95,4 +97,7 @@ How to analyze:
 - include <stdlib.h> to dump.c for non-linux OS
 
 - build to generate include files from their config
- 
+
+## pugixml
+
+C++ XML Parser - https://github.com/zeux/pugixml

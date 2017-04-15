@@ -72,16 +72,24 @@ static cl::list<string> inPath{cl::Positional,
 							   cl::cat{tokenProfilerCategory}};
 
 
+static tokenprofiling::VEC_INFO token_vectors;
+
+
 static void analyzeModule(Module& module, BUG_REPO& bugs,
 	tokenprofiling::TOKEN_REPO& tok_repo)
 {
+	tokenprofiling::TokenVectorPass* tpass = new tokenprofiling::TokenVectorPass(bugs, &tok_repo);
+
 	// Build up all of the passes that we want to run on the module.
 	legacy::PassManager pm;
 	pm.add(new DominatorTreeWrapperPass());
 	pm.add(new LoopInfoWrapperPass());
-	pm.add(new tokenprofiling::TokenVectorPass(bugs, &tok_repo));
+	pm.add(tpass);
 	pm.add(createVerifierPass());
 	pm.run(module);
+
+	token_vectors.insert(token_vectors.end(),
+	tpass->token_vectors_.begin(), tpass->token_vectors_.end());
 }
 
 
@@ -140,6 +148,18 @@ int main(int argc, char** argv)
 			return -1;
 		}
 		analyzeModule(*module, bugs, tok_repo);
+	}
+
+	std::unordered_set<uint64_t> infreq;
+	tok_repo.infrequent(infreq, 3);
+	std::ofstream tv_out("token_vector.csv", std::ofstream::app);
+	for (tokenprofiling::TOK_INFO& info : token_vectors)
+	{
+		info.prune(infreq);
+		if (false == info.vecs_.empty())
+		{
+			info.print(tv_out);
+		}
 	}
 
 	std::ofstream encoding_out("token_encoding.csv", std::ofstream::app);

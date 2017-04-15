@@ -27,8 +27,55 @@ namespace tokenprofiling
 struct TOKEN_REPO
 {
 	std::vector<std::string> tokens_;
+	std::vector<size_t> usage_;
 	std::unordered_map<std::string, uint64_t> token_map_;
+
+	void infrequent (std::unordered_set<uint64_t>& infreq, size_t min_uses)
+	{
+		for (uint64_t i = 0, n = usage_.size(); i < n; i++)
+		{
+			if (usage_[i] < min_uses)
+			{
+				infreq.emplace(i);
+			}
+		}
+	}
 };
+
+
+struct TOK_INFO
+{
+	std::string modname_;
+	bool buggy_;
+	std::vector<uint64_t> vecs_;
+
+	void prune (std::unordered_set<uint64_t>& infrequent_toks)
+	{
+		std::remove_if(vecs_.begin(), vecs_.end(),
+		[&infrequent_toks](uint64_t ti)
+		{
+			return infrequent_toks.end() != infrequent_toks.find(ti);
+		});
+	}
+
+	void print (std::ofstream& o)
+	{
+		if (1 < vecs_.size() && o.good())
+		// prune tokens of size 1
+		{
+			// out put ttv
+			o << modname_ << "," << buggy_;
+			for (uint64_t tk : vecs_)
+			{
+				o << "," << tk;
+			}
+			o << std::endl;
+		}
+	}
+};
+
+
+using VEC_INFO = std::vector<TOK_INFO>;
 
 
 struct TokenVectorPass : public llvm::ModulePass
@@ -41,9 +88,13 @@ struct TokenVectorPass : public llvm::ModulePass
 
 	TOKEN_REPO* tok_repo_;
 
+	VEC_INFO token_vectors_;
+
 	std::unordered_map<std::string, uint64_t> func_ids_;
 
 	std::unordered_map<uint64_t, std::vector<uint64_t> > tok_vector_;
+
+	std::unordered_set<std::string> methods_;
 
 	TokenVectorPass(TOKEN_REPO* repo) : llvm::ModulePass(ID), tok_repo_(repo) {}
 

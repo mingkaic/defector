@@ -45,22 +45,6 @@ static optional<unsigned> getLineNumber(Module& m, Instruction& inst)
 }
 
 
-static void printTokens (llvm::Module& module, std::ofstream& o, bool buggy, std::vector<uint64_t>& tks)
-{
-	if (1 < tks.size() && o.good())
-	// prune tokens of size 1
-	{
-		// out put ttv
-		o << module.getName().str() << "," << buggy;
-		for (uint64_t tk : tks)
-		{
-			o << "," << tk;
-		}
-		o << std::endl;
-	}
-}
-
-
 void TokenVectorPass::storeToken(uint64_t func_id, std::string label)
 {
 	if (nullptr == tok_repo_) return;
@@ -71,10 +55,12 @@ void TokenVectorPass::storeToken(uint64_t func_id, std::string label)
 	{
 		tk = tok_repo_->token_map_[label] = last_token++;
 		tok_repo_->tokens_.push_back(label);
+		tok_repo_->usage_.push_back(1);
 	}
 	else
 	{
 		tk = it->second;
+		tok_repo_->usage_[tk]++;
 	}
 
 	tok_vector_[func_id].push_back(tk);
@@ -393,7 +379,6 @@ bool TokenVectorPass::runOnModule(llvm::Module& module)
 		}
 	}
 
-	std::ofstream tv_out("token_vector.csv", std::ofstream::app);
 	std::unordered_set<uint64_t> painted;
 	for (std::vector<uint64_t>& clust : dependencies)
 	{
@@ -406,17 +391,17 @@ bool TokenVectorPass::runOnModule(llvm::Module& module)
 			std::vector<uint64_t>& tvec = tok_vector_[func];
 			vecs.insert(vecs.end(), tvec.begin(), tvec.end());
 		}
-		printTokens(module, tv_out, buggy, vecs);
+		token_vectors_.push_back({module.getName().str(), buggy, vecs});
 	}
 	for (auto tvit : tok_vector_)
 	{
 		uint64_t func = tvit.first;
 		if (painted.end() == painted.find(func))
 		{
-			printTokens(module, tv_out, err_funcs.end() != err_funcs.find(func), tvit.second);
+			token_vectors_.push_back({module.getName().str(),
+			err_funcs.end() != err_funcs.find(func), tvit.second});
 		}
 	}
-	tv_out.close();
 
 	return true;
 }
