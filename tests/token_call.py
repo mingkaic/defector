@@ -35,22 +35,33 @@ def get_tokens (encode_fname, tvec_fname):
         print "no existing file", tvec_fname
     return tvecs
 
-def encode_tokens ():
+def encode_tokens (project = None):
     tokeninfo = get_tokens("token_encoding_mutate.csv", "token_vector_mutate.csv")
     # normalize all tokens
     max = len(tokens)
     buggy = []
     clean = []
     maxvec = 0
-    for proj in tokeninfo:
-        for info in tokeninfo[proj]:
-            norm = map(lambda x: float(x) / max, info.vec)
+
+    if project:
+        for info in tokeninfo[project]:
+            norm = map(lambda x: (1.0 + float(x)) / max, info.vec)
             if maxvec < len(norm):
                 maxvec = len(norm)
             if info.buggy:
                 buggy.append(norm)
             else:
                 clean.append(norm)
+    else:
+        for proj in tokeninfo:
+            for info in tokeninfo[proj]:
+                norm = map(lambda x: (1.0 + float(x)) / max, info.vec)
+                if maxvec < len(norm):
+                    maxvec = len(norm)
+                if info.buggy:
+                    buggy.append(norm)
+                else:
+                    clean.append(norm)
     # pad with zero to enforce size
     blen = len(buggy)
     clen = len(clean)
