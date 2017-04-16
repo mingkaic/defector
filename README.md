@@ -53,8 +53,6 @@ Not captured by Tokens
 
 - Build/Package
 
-- Syntax/Static
-
 - Assignment
 
 Not easily captured by Tokens
@@ -64,6 +62,8 @@ Not easily captured by Tokens
 - Interface
 
 Captured by Tokens
+
+- Syntax/Static
 
 - Checking (if statements)
 
