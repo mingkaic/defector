@@ -1,0 +1,13 @@
+Creating training model
+Training
+>>> 0
+Traceback (most recent call last):
+  File "semantic_learning_dbn.py", line 91, in <module>
+    main()
+  File "build/bdist.linux-x86_64/egg/keras_extensions/logging.py", line 118, in wrapped
+  File "semantic_learning_dbn.py", line 56, in main
+    dbn.fit(X_train,batch_size,nb_epoch,verbose=1,shuffle=False)
+  File "build/bdist.linux-x86_64/egg/keras_extensions/dbn.py", line 65, in fit
+  File "build/bdist.linux-x86_64/egg/keras_extensions/dbn.py", line 120, in greedy_layerwise_train
+  File "build/bdist.linux-x86_64/egg/keras_extensions/models.py", line 35, in compile
+AttributeError: 'SingleLayerUnsupervised' object has no attribute 'params'
